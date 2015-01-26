@@ -146,14 +146,10 @@ public class L3GD20H implements MultiAxisGyro {
         }
 
         // read from OUT_X_L, OUT_X_H, OUT_Y_L, OUT_Y_H, OUT_Z_L, OUT_Z_H
-        // somehow multi byte read does not work... so read a byte at a time
-        // this seems to be a problem of the device, it does not work with i2cget on cmdline either
-        for (int i = 0; i < data.length; i++) {
-            int r = device.read(OUT_X_L + i);
-            if (r < 0) {
-                throw new IOException("Couldn't read gyro data; r=" + r);
-            }
-            data[i] = (byte) (r & 0xff);
+        // according to the spec for multi-byte read bit 7 of the address must be set
+        int r = device.read(OUT_X_L | (1 << 7), data, 0, 6);
+        if (r != 6) {
+            throw new IOException("Couldn't read gyro data; r=" + r);
         }
 
         short x = (short) ((data[1] << 8) | data[0]);
