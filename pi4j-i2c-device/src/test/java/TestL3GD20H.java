@@ -38,7 +38,7 @@ public class TestL3GD20H {
 
         L3GD20H l3gd20h = new L3GD20H(bus);
 
-        l3gd20h.init(l3gd20h.X, Gyroscope.GET_RAW_VALUE_TRIGGER_READ);
+        l3gd20h.init(null, Gyroscope.READ_NOT_TRIGGERED);
 
         long now = System.currentTimeMillis();
 
