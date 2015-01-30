@@ -27,15 +27,13 @@ package com.pi4j.i2c.devices;
  * #L%
  */
 
-import com.pi4j.component.gyroscope.AxisGyroscope;
-import com.pi4j.component.gyroscope.Gyroscope;
-import com.pi4j.component.gyroscope.MultiAxisGyro;
+import com.pi4j.component.xyz.impl.XYZ16bitSignedScaledSensorImpl;
 import com.pi4j.io.i2c.I2CBus;
 import com.pi4j.io.i2c.I2CDevice;
 
 import java.io.IOException;
 
-public class L3GD20H implements MultiAxisGyro {
+public class L3GD20H extends XYZ16bitSignedScaledSensorImpl {
 
     public final static int L3GD20H_ADDRESS = 0x6b;
     /* register addresses */
@@ -69,48 +67,12 @@ public class L3GD20H implements MultiAxisGyro {
 
     private I2CDevice device;
 
-    // default dps for L3GD20H: 245, could be changed in CTRL4
-    public final Gyroscope X = new AxisGyroscope(this, 245f);
-    public final Gyroscope Y = new AxisGyroscope(this, 245f);
-    public final Gyroscope Z = new AxisGyroscope(this, 245f);
-
-    protected final AxisGyroscope aX = (AxisGyroscope) X;
-    protected final AxisGyroscope aY = (AxisGyroscope) Y;
-    protected final AxisGyroscope aZ = (AxisGyroscope) Z;
-
-    private int timeDelta;
-    private long lastRead;
-
-    private static final int CALIBRATION_READS = 50;
-    private static final int CALIBRATION_SKIPS = 5;
-
-
     public L3GD20H(I2CBus bus) throws IOException {
         device = bus.getDevice(L3GD20H_ADDRESS);
+        // default dps for L3GD20H: 245, could be changed in CTRL4
+        setFullScale(245);
     }
 
-    public Gyroscope init(Gyroscope triggeringAxis, int triggeringMode) throws IOException {
-        enable();
-
-        if (triggeringAxis == aX) {
-            aX.setReadTrigger(triggeringMode);
-        } else {
-            aX.setReadTrigger(Gyroscope.READ_NOT_TRIGGERED);
-        }
-        if (triggeringAxis == aY) {
-            aY.setReadTrigger(triggeringMode);
-        } else {
-            aY.setReadTrigger(Gyroscope.READ_NOT_TRIGGERED);
-        }
-        if (triggeringAxis == aZ) {
-            aZ.setReadTrigger(triggeringMode);
-        } else {
-            aZ.setReadTrigger(Gyroscope.READ_NOT_TRIGGERED);
-        }
-        return triggeringAxis;
-    }
-
-    @Override
     public void enable() throws IOException {
         // CTRL1 PD -> Power Mode (0=Power Down, 1=Normal Mode)
         byte ctrl1 = (byte) device.read(CTRL1);
@@ -122,8 +84,6 @@ public class L3GD20H implements MultiAxisGyro {
         device.write(CTRL4, ctrl4);
     }
 
-
-    @Override
     public void disable() throws IOException {
         // CTRL1 PD -> Power Mode (0=Power Down, 1=Normal Mode)
         byte ctrl1 = (byte) device.read(CTRL1);
@@ -132,19 +92,8 @@ public class L3GD20H implements MultiAxisGyro {
     }
 
 
-    @Override
-    public void readGyro() throws IOException {
-        long now = System.currentTimeMillis();
-        timeDelta = (int) (now - lastRead);
-        lastRead = now;
-
+    public void readData() throws IOException {
         byte[] data = new byte[6];
-
-        try {
-            Thread.sleep(10);
-        } catch (InterruptedException ignore) {
-        }
-
         // read from OUT_X_L, OUT_X_H, OUT_Y_L, OUT_Y_H, OUT_Z_L, OUT_Z_H
         // according to the spec for multi-byte read bit 7 of the address must be set
         int r = device.read(OUT_X_L | (1 << 7), data, 0, 6);
@@ -152,84 +101,14 @@ public class L3GD20H implements MultiAxisGyro {
             throw new IOException("Couldn't read gyro data; r=" + r);
         }
 
-        short x = (short) (((data[1] & 0xff) << 8) | (data[0] & 0xff));
-        short y = (short) (((data[3] & 0xff) << 8) | (data[2] & 0xff));
-        short z = (short) (((data[5] & 0xff) << 8) | (data[4] & 0xff));
+        setX(data[1], data[0]);
+        setY(data[3], data[2]);
+        setZ(data[5], data[4]);
 
 //        System.out.println(String.format("0: %#x, 1: %#x, 2: %#x, 3: %#x, 4: %#x, 5: %#x", data[0], data[1], data[2], data[3], data[4], data[5]));
-//        System.out.println(String.format("X: %d, Y: %d, Z: %d", x, y, z));
-
-        aX.setRawValue(x);
-        aY.setRawValue(y);
-        aZ.setRawValue(z);
+//        System.out.println(String.format("X: %#x, Y: %#x, Z: %#x", getX(), getY(), getZ()));
+//        System.out.println(String.format("X: %d, Y: %d, Z: %d", getX(), getY(), getZ()));
 
     }
-
-
-    @Override
-    public int getTimeDelta() {
-        return timeDelta;
-    }
-
-
-    @Override
-    public void recalibrateOffset() throws IOException {
-        long totalX = 0;
-        long totalY = 0;
-        long totalZ = 0;
-
-        int minX = 10000;
-        int minY = 10000;
-        int minZ = 10000;
-
-        int maxX = -10000;
-        int maxY = -10000;
-        int maxZ = -10000;
-
-        for (int i = 0; i < CALIBRATION_SKIPS; i++) {
-            readGyro();
-            try {
-                Thread.sleep(1);
-            } catch (InterruptedException ignore) {
-            }
-        }
-
-        for (int i = 0; i < CALIBRATION_READS; i++) {
-            readGyro();
-
-            int x = aX.getRawValue();
-            int y = aY.getRawValue();
-            int z = aZ.getRawValue();
-
-            totalX = totalX + x;
-            totalY = totalY + y;
-            totalZ = totalZ + z;
-            if (x < minX) {
-                minX = x;
-            }
-            if (y < minY) {
-                minY = y;
-            }
-            if (z < minZ) {
-                minZ = z;
-            }
-
-            if (x > maxX) {
-                maxX = x;
-            }
-            if (y > maxY) {
-                maxY = y;
-            }
-            if (z > maxZ) {
-                maxZ = z;
-            }
-        }
-
-        aX.setOffset((int) (totalX / CALIBRATION_READS));
-        aY.setOffset((int) (totalY / CALIBRATION_READS));
-        aZ.setOffset((int) (totalZ / CALIBRATION_READS));
-
-    }
-
 
 }
