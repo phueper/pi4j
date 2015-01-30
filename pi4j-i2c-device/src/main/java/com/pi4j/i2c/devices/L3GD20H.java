@@ -152,9 +152,9 @@ public class L3GD20H implements MultiAxisGyro {
             throw new IOException("Couldn't read gyro data; r=" + r);
         }
 
-        short x = (short) ((data[1] << 8) | data[0]);
-        short y = (short) ((data[3] << 8) | data[2]);
-        short z = (short) ((data[5] << 8) | data[4]);
+        short x = (short) (((data[1] & 0xff) << 8) | (data[0] & 0xff));
+        short y = (short) (((data[3] & 0xff) << 8) | (data[2] & 0xff));
+        short z = (short) (((data[5] & 0xff) << 8) | (data[4] & 0xff));
 
 //        System.out.println(String.format("0: %#x, 1: %#x, 2: %#x, 3: %#x, 4: %#x, 5: %#x", data[0], data[1], data[2], data[3], data[4], data[5]));
 //        System.out.println(String.format("X: %d, Y: %d, Z: %d", x, y, z));
