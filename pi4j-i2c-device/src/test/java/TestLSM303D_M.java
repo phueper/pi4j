@@ -52,6 +52,7 @@ public class TestLSM303D_M {
 
             measurement++;
         }
+        lsm303d_m.disable();
         System.out.println();
     }
 

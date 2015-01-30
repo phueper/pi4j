@@ -42,10 +42,31 @@ public class LSM303D_M extends LSM303D {
 
     public LSM303D_M(I2CBus bus) throws IOException {
         super(bus);
-        // default scale for LSM303D_A: +/- 2 gauss, could be changed in CTRL6
-        setFullScale(2);
+        // default scale for LSM303D_A: +/- 4 gauss, could be changed in CTRL6
+        setFullScale(4);
         dataBaseRegAddress = OUT_X_L_M;
     }
 
+    public void enable() throws IOException {
+        // CTRL1 BDU -> Block Data Update (1= output registers not updated until MSB and LSB reading)
+        // CTRL5 MODR[2:0] -> Data Rate selection (0x4 = 50 Hz) (Attention: 100 Hz mode only works if accelerometer is 100Hz or disabled!!) 
+        // CTRL7 MD[1:0] -> Power Mode (0x0 = Continuous conversion mode) 
+        byte ctrl1 = (byte) device.read(CTRL1);
+        byte ctrl5 = (byte) device.read(CTRL5);
+        byte ctrl7 = (byte) device.read(CTRL7);
+        ctrl1 |= (byte) 1 << 3;
+        ctrl5 |= (byte) (0x4 & 0x7) << 2;
+        ctrl7 &= (byte) ~(0x3);
+        device.write(CTRL1, ctrl1);
+        device.write(CTRL5, ctrl5);
+        device.write(CTRL7, ctrl7);
+    }
+
+    public void disable() throws IOException {
+        // CTRL7 MD[1:0] -> Power Mode (0x3 = Power-down)
+        byte ctrl7 = (byte) device.read(CTRL7);
+        ctrl7 |= (byte) 0x3;
+        device.write(CTRL7, ctrl7);
+    }
 
 }

@@ -111,22 +111,6 @@ public abstract class LSM303D extends XYZ16bitSignedScaledSensorImpl {
         device = bus.getDevice(LSM303D_ADDRESS);
     }
 
-    public void enable() throws IOException {
-        // CTRL1 AODR[3:0] -> Power Mode (0x7 = 200 Hz) 
-        byte ctrl1 = (byte) device.read(CTRL1);
-        ctrl1 |= (byte) 0x7 << 4;
-        // CTRL1 BDU -> Block Data Update (1= output registers not updated until MSB and LSB reading)
-        ctrl1 |= (byte) 1 << 3;
-        device.write(CTRL1, ctrl1);
-    }
-
-    public void disable() throws IOException {
-        // CTRL1 AODR -> Power Mode (0 = Power Down)
-        byte ctrl1 = (byte) device.read(CTRL1);
-        ctrl1 &= (byte) ~(0xF << 4);
-        device.write(CTRL1, ctrl1);
-    }
-
     public void readData() throws IOException {
         byte[] data = new byte[6];
         // read from OUT_X_L_A, OUT_X_H_A, OUT_Y_L_A, OUT_Y_H_A, OUT_Z_L_A, OUT_Z_H_A
