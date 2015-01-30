@@ -134,16 +134,16 @@ public abstract class LSM303D extends XYZ16bitSignedScaledSensorImpl {
         int r = device.read(dataBaseRegAddress | (1 << 7), data, 0, 6);
         
         if (r != 6) {
-            throw new IOException("Couldn't read gyro data; r=" + r);
+            throw new IOException("Couldn't read data; r=" + r);
         }
 
         setX(data[1], data[0]);
         setY(data[3], data[2]);
         setZ(data[5], data[4]);
 
-        System.out.println(String.format("0: %#x, 1: %#x, 2: %#x, 3: %#x, 4: %#x, 5: %#x", data[0], data[1], data[2], data[3], data[4], data[5]));
-        System.out.println(String.format("X: %#x, Y: %#x, Z: %#x", getX(), getY(), getZ()));
-        System.out.println(String.format("X: %d, Y: %d, Z: %d", getX(), getY(), getZ()));
+//        System.out.println(String.format("0: %#x, 1: %#x, 2: %#x, 3: %#x, 4: %#x, 5: %#x", data[0], data[1], data[2], data[3], data[4], data[5]));
+//        System.out.println(String.format("X: %#x, Y: %#x, Z: %#x", getX(), getY(), getZ()));
+//        System.out.println(String.format("X: %d, Y: %d, Z: %d", getX(), getY(), getZ()));
 
     }
 }
