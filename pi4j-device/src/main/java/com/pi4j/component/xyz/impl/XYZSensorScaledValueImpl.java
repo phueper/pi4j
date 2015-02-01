@@ -5,7 +5,7 @@ package com.pi4j.component.xyz.impl;
  * **********************************************************************
  * ORGANIZATION  :  Pi4J
  * PROJECT       :  Pi4J :: Device Abstractions
- * FILENAME      :  XYZ16bitSignedScaledSensorImpl.java  
+ * FILENAME      :  XYZSensorScaledValueImpl.java  
  * 
  * This file is part of the Pi4J project. More information about 
  * this project can be found here:  http://www.pi4j.com/
@@ -27,12 +27,12 @@ package com.pi4j.component.xyz.impl;
  * #L%
  */
 
-import com.pi4j.component.xyz.XYZ16bitSignedScaledSensor;
+import com.pi4j.component.xyz.XYZSensorScaledValue;
 
 /**
  * implementation for XYZ16bitSignedScaledSensor
  */
-public class XYZ16bitSignedScaledSensorImpl implements XYZ16bitSignedScaledSensor {
+public class XYZSensorScaledValueImpl implements XYZSensorScaledValue {
     // to make it easier to port this to other bit sizes, we store positive / negative MAX as absolute values already as float
     private static final float POSITIVE_MAX = Short.MAX_VALUE;
     private static final float NEGATIVE_MAX = Math.abs(Short.MIN_VALUE);
@@ -126,7 +126,7 @@ public class XYZ16bitSignedScaledSensorImpl implements XYZ16bitSignedScaledSenso
         return rval;
     }
 
-    private short getShortFromMsbLsb(byte msb, byte lsb) {
+    public static short getShortFromMsbLsb(byte msb, byte lsb) {
         return (short) (((msb & 0xff) << 8) | (lsb & 0xff));
     }
 }

@@ -5,7 +5,7 @@ package com.pi4j.component.xyz;
  * **********************************************************************
  * ORGANIZATION  :  Pi4J
  * PROJECT       :  Pi4J :: Device Abstractions
- * FILENAME      :  XYZ16bitSignedScaledSensor.java  
+ * FILENAME      :  XYZSensorScaledValue.java  
  * 
  * This file is part of the Pi4J project. More information about 
  * this project can be found here:  http://www.pi4j.com/
@@ -36,7 +36,7 @@ package com.pi4j.component.xyz;
  * This could be any sensor providing scaled 3D axis data (e.g. gyro, accelerometer, magnetometer, ...)
  *
  */
-public interface XYZ16bitSignedScaledSensor extends XYZ16bitSignedSensor {
+public interface XYZSensorScaledValue extends XYZSensorValue {
     float getFullScale();
     void setFullScale(float fullScale);
     float getScaledX();

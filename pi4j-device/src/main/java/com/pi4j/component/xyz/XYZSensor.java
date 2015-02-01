@@ -5,7 +5,7 @@ package com.pi4j.component.xyz;
  * **********************************************************************
  * ORGANIZATION  :  Pi4J
  * PROJECT       :  Pi4J :: Device Abstractions
- * FILENAME      :  XYZ16bitSignedSensor.java  
+ * FILENAME      :  XYZSensor.java  
  * 
  * This file is part of the Pi4J project. More information about 
  * this project can be found here:  http://www.pi4j.com/
@@ -27,21 +27,13 @@ package com.pi4j.component.xyz;
  * #L%
  */
 
-/**
- * Interface for a 3D (X, Y, Z) Sensor storing 16bit signed (short) values
- * 
- * This could be any sensor providing 3D axis data (e.g. gyro, accelerometer, magnetometer, ...)
- * 
- */
-public interface XYZ16bitSignedSensor {
+import java.io.IOException;
+import java.util.List;
+
+public interface XYZSensor<V extends XYZSensorValue> {
     
-    short getX();
-    void setX(short x);
-    void setX(byte msb, byte lsb);
-    short getY();
-    void setY(short x);
-    void setY(byte msb, byte lsb);
-    short getZ();
-    void setZ(short x);
-    void setZ(byte msb, byte lsb);
+    public void enable(boolean enableFifo) throws IOException;
+    public void disable() throws IOException;
+    public V readSingleData() throws IOException;
+    public List<V> readFifoData() throws IOException;
 }
