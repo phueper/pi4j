@@ -43,11 +43,12 @@ public class LSM303D_A extends LSM303D {
     public LSM303D_A(I2CBus bus) throws IOException {
         super(bus);
         // default scale for LSM303D_A: +/- 2g, could be changed in CTRL2
-        setFullScale(2);
+        fullScale = 2;
         dataBaseRegAddress = OUT_X_L_A;
     }
 
-    public void enable() throws IOException {
+    @Override
+    public void enable(boolean enableFifo) throws IOException {
         // CTRL1 AODR[3:0] -> Power Mode (0x5 = 50 Hz) 
         byte ctrl1 = (byte) device.read(CTRL1);
         ctrl1 |= (byte) (0x5 & 0xf) << 4;
@@ -56,6 +57,7 @@ public class LSM303D_A extends LSM303D {
         device.write(CTRL1, ctrl1);
     }
 
+    @Override
     public void disable() throws IOException {
         // CTRL1 AODR -> Power Mode (0 = Power Down)
         byte ctrl1 = (byte) device.read(CTRL1);

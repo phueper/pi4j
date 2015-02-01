@@ -27,13 +27,17 @@ package com.pi4j.i2c.devices;
  * #L%
  */
 
-import com.pi4j.component.xyz.impl.XYZ16bitSignedScaledSensorImpl;
+import com.pi4j.component.xyz.XYZSensor;
+import com.pi4j.component.xyz.XYZSensorScaledValue;
+import com.pi4j.component.xyz.impl.XYZSensorScaledValueImpl;
 import com.pi4j.io.i2c.I2CBus;
 import com.pi4j.io.i2c.I2CDevice;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
-public class L3GD20H extends XYZ16bitSignedScaledSensorImpl {
+public class L3GD20H implements XYZSensor<XYZSensorScaledValue> {
 
     public final static int L3GD20H_ADDRESS = 0x6b;
     /* register addresses */
@@ -64,51 +68,181 @@ public class L3GD20H extends XYZ16bitSignedScaledSensorImpl {
     public static final int IG_THS_ZL = 0x37;
     public static final int IG_DURATION = 0x38;
     public static final int LOW_ODR = 0x39;
+    
+    public static final int FIFO_THRESHOLD = 30;
+    private final float fullScale;
 
     private I2CDevice device;
+    private boolean fifoEnabled = false;
 
     public L3GD20H(I2CBus bus) throws IOException {
         device = bus.getDevice(L3GD20H_ADDRESS);
         // default dps for L3GD20H: 245, could be changed in CTRL4
-        setFullScale(245);
+        fullScale = 245;
     }
 
-    public void enable() throws IOException {
+    @Override
+    public void enable(boolean enableFifo) throws IOException {
         // CTRL1 PD -> Power Mode (0=Power Down, 1=Normal Mode)
         byte ctrl1 = (byte) device.read(CTRL1);
         ctrl1 |= (byte) 1 << 3;
         device.write(CTRL1, ctrl1);
+        byte low_odr = (byte) device.read(LOW_ODR);
+        // reset at next boot
+        low_odr |= (byte) 1 << 2;
+        device.write(LOW_ODR, low_odr);
+        byte ctrl5 = (byte) device.read(CTRL5);
+        // after power up force a boot
+        ctrl5 |= (byte) 1 << 7;
+        device.write(CTRL5, ctrl5);
+        // need to wait a little for the boot
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            // do nothing
+        }
+        // ... and power up again CTRL1 PD -> Power Mode (0=Power Down, 1=Normal Mode)
+        ctrl1 = (byte) device.read(CTRL1);
+        ctrl1 |= (byte) 1 << 3;
+        device.write(CTRL1, ctrl1);
+        // CTRL1 DR[1:0] and BW[1:0] -> Data Rate / Bandwidth 
+        // if LOW_ODR=0,b0 DR=0b00 and BW=0b00 -> 100 Hz (default)
+        // currently nothing to do
         // CTRL4 BDU -> Block Data Update (1= output registers not updated until MSB and LSB reading)
         byte ctrl4 = (byte) device.read(CTRL4);
         ctrl4 |= (byte) 1 << 7;
         device.write(CTRL4, ctrl4);
+        if (enableFifo) {
+            enableFifo();
+        }
     }
 
+    private void enableFifo() throws IOException {
+        fifoEnabled = true;
+        // enable dynamic stream mode
+        // FIFO_CTRL(FM2:0) = 0b110
+        byte fifo_ctrl = (byte) device.read(FIFO_CTRL);
+        fifo_ctrl |= (byte) 0b110 << 5;
+        // FIFO Threshold (max. N+1 entries)
+        fifo_ctrl |= FIFO_THRESHOLD;
+        device.write(FIFO_CTRL, fifo_ctrl);
+        // need to wait a little before enabling FIFO
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            // do nothing
+        }
+        // FIFO_EN to Enable
+        byte ctrl5 = (byte) device.read(CTRL5);
+        ctrl5 |= (byte) 1 << 6;
+        // enable High Pass Filter
+        ctrl5 |= (byte) 1 << 4;
+        device.write(CTRL5, ctrl5);
+    }
+
+    @Override
     public void disable() throws IOException {
+        if (fifoEnabled) {
+            // disable fifo
+            // FIFO_EN to Disable
+            byte ctrl5 = (byte) device.read(CTRL5);
+            ctrl5 &= (byte) (~(1 << 6) & 0xff);
+            device.write(CTRL5, ctrl5);
+        }
         // CTRL1 PD -> Power Mode (0=Power Down, 1=Normal Mode)
         byte ctrl1 = (byte) device.read(CTRL1);
         ctrl1 &= (byte) ~(1 << 3);
         device.write(CTRL1, ctrl1);
     }
 
+    @Override
+    public List<XYZSensorScaledValue> readFifoData() throws IOException {
+        List<XYZSensorScaledValue> rval = new ArrayList<>();
+        byte[] data = new byte[6 * (FIFO_THRESHOLD + 1)];
+        // read FIFO_SRC to see how much data was available and wether overrun occurred
+        byte fifo_src = (byte) device.read(FIFO_SRC);
+        // read from OUT_X_L, OUT_X_H, OUT_Y_L, OUT_Y_H, OUT_Z_L, OUT_Z_H
+        // in read burst mode, if more than 6 bytes are supposed to be read, 
+        // the reading starts at OUT_X_L, continues to OUT_Z_H and then resets
+        // to OUT_X_L until all requested bytes are read
+        // according to the spec for multi-byte read bit 7 of the address must be set
+        int r = device.read(OUT_X_L | (1 << 7), data, 0, data.length);
+        if (r <= 0) {
+            throw new IOException("Couldn't read gyro data in burst mode; r=" + r);
+        }
 
-    public void readData() throws IOException {
+        boolean fth = (fifo_src & (1 << 7)) != 0;
+        boolean ovrn = (fifo_src & (1 << 6)) != 0;
+        boolean empty = (fifo_src & (1 << 5)) != 0;
+        byte fss = (byte) (fifo_src & (0x1f));
+
+        byte ctrl1 = (byte) device.read(CTRL1);
+        byte ctrl4 = (byte) device.read(CTRL4);
+        byte ctrl5 = (byte) device.read(CTRL5);
+        byte fifo_ctrl = (byte) device.read(FIFO_CTRL);
+        byte low_odr = (byte) device.read(LOW_ODR);
+        
+        // ------- debug ------
+//        System.out.println(String.format("CTRL1: %#x (0b%8s)", ctrl1, Integer.toBinaryString(ctrl1 & 0xff)));
+//        System.out.println(String.format("CTRL4: %#x (0b%8s)", ctrl4, Integer.toBinaryString(ctrl4 & 0xff)));
+//        System.out.println(String.format("CTRL5: %#x (0b%8s)", ctrl5, Integer.toBinaryString(ctrl5 & 0xff)));
+//        System.out.println(String.format("FIFO_CTRL: %#x (0b%8s)", fifo_ctrl, Integer.toBinaryString(fifo_ctrl & 0xff)));
+//        System.out.println(String.format("LOW_ODR: %#x (0b%8s)", low_odr, Integer.toBinaryString(low_odr & 0xff)));
+//        System.out.println(String.format("FIFO_SRC: %#x (0b%8s)", fifo_src, Integer.toBinaryString(fifo_src & 0xff)));
+//        System.out.println(String.format("FTH: %b, OVRN: %b, EMPTY: %b, FSS: %#x(%d)", fth, ovrn, empty, fss, fss));
+//        StringBuffer sb = new StringBuffer("DATA: \n");
+//        for (int i = 0; i + 1 < data.length;) {
+//            byte lsb = data[i++];
+//            byte msb = data[i++];
+//            sb.append(String.format("%3d: %#4x, ", i - 2, XYZSensorScaledValueImpl.getShortFromMsbLsb(msb, lsb)));
+//            if (i % 6 == 0) {
+//                sb.append("\n");
+//            }
+//        }
+//        System.out.println(sb.toString());
+        // ------- debug ------
+        
+        
+        for (int valueCount = 0, byteCount = 0; valueCount < fss; valueCount++) {
+            XYZSensorScaledValue value = new XYZSensorScaledValueImpl();
+            value.setFullScale(fullScale);
+            // get X valyes
+            byte lsb = data[byteCount++];
+            byte msb = data[byteCount++];
+            value.setX(msb, lsb);
+            // get Y valyes
+            lsb = data[byteCount++];
+            msb = data[byteCount++];
+            value.setY(msb, lsb);
+            // get Z valyes
+            lsb = data[byteCount++];
+            msb = data[byteCount++];
+            value.setZ(msb, lsb);
+            rval.add(value);
+        }
+        return rval;
+    }
+
+    @Override
+    public XYZSensorScaledValue readSingleData() throws IOException {
+        XYZSensorScaledValue value = new XYZSensorScaledValueImpl();
+        value.setFullScale(fullScale);
         byte[] data = new byte[6];
         // read from OUT_X_L, OUT_X_H, OUT_Y_L, OUT_Y_H, OUT_Z_L, OUT_Z_H
         // according to the spec for multi-byte read bit 7 of the address must be set
-        int r = device.read(OUT_X_L | (1 << 7), data, 0, 6);
+        int r = device.read(OUT_X_L | (1 << 7), data, 0, data.length);
         if (r != 6) {
             throw new IOException("Couldn't read gyro data; r=" + r);
         }
 
-        setX(data[1], data[0]);
-        setY(data[3], data[2]);
-        setZ(data[5], data[4]);
+        value.setX(data[1], data[0]);
+        value.setY(data[3], data[2]);
+        value.setZ(data[5], data[4]);
 
 //        System.out.println(String.format("0: %#x, 1: %#x, 2: %#x, 3: %#x, 4: %#x, 5: %#x", data[0], data[1], data[2], data[3], data[4], data[5]));
 //        System.out.println(String.format("X: %#x, Y: %#x, Z: %#x", getX(), getY(), getZ()));
 //        System.out.println(String.format("X: %d, Y: %d, Z: %d", getX(), getY(), getZ()));
-
+        return value;
     }
 
 }

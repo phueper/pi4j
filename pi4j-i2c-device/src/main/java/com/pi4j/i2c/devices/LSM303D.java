@@ -27,11 +27,15 @@ package com.pi4j.i2c.devices;
  * #L%
  */
 
-import com.pi4j.component.xyz.impl.XYZ16bitSignedScaledSensorImpl;
+import com.pi4j.component.xyz.XYZSensor;
+import com.pi4j.component.xyz.XYZSensorScaledValue;
+import com.pi4j.component.xyz.impl.XYZSensorScaledValueImpl;
 import com.pi4j.io.i2c.I2CBus;
 import com.pi4j.io.i2c.I2CDevice;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * the LSM303D has an Accelerometer and a Magnetometer,
@@ -41,7 +45,7 @@ import java.io.IOException;
  * This class is the abstract superclass for both Accelerometer and Magnetometer 
  * for common properties and methods
  */
-public abstract class LSM303D extends XYZ16bitSignedScaledSensorImpl {
+public abstract class LSM303D implements XYZSensor<XYZSensorScaledValue> {
     public final static int LSM303D_ADDRESS = 0x1d;
     /* register addresses */
     public static final int TEMP_OUT_L = 0x05;
@@ -106,28 +110,40 @@ public abstract class LSM303D extends XYZ16bitSignedScaledSensorImpl {
     
     /* where to read the data from */
     protected int dataBaseRegAddress;
+    
+    protected float fullScale = 1;
 
     public LSM303D(I2CBus bus) throws IOException {
         device = bus.getDevice(LSM303D_ADDRESS);
     }
 
-    public void readData() throws IOException {
+    @Override
+    public List<XYZSensorScaledValue> readFifoData() throws IOException {
+        // not implemented
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public XYZSensorScaledValue readSingleData() throws IOException {
+        XYZSensorScaledValue value = new XYZSensorScaledValueImpl();
+        value.setFullScale(fullScale);
         byte[] data = new byte[6];
         // read from OUT_X_L_A, OUT_X_H_A, OUT_Y_L_A, OUT_Y_H_A, OUT_Z_L_A, OUT_Z_H_A
         // according to the spec for multi-byte read bit 7 of the address must be set
         int r = device.read(dataBaseRegAddress | (1 << 7), data, 0, 6);
-        
+
         if (r != 6) {
             throw new IOException("Couldn't read data; r=" + r);
         }
 
-        setX(data[1], data[0]);
-        setY(data[3], data[2]);
-        setZ(data[5], data[4]);
+        value.setX(data[1], data[0]);
+        value.setY(data[3], data[2]);
+        value.setZ(data[5], data[4]);
 
 //        System.out.println(String.format("0: %#x, 1: %#x, 2: %#x, 3: %#x, 4: %#x, 5: %#x", data[0], data[1], data[2], data[3], data[4], data[5]));
 //        System.out.println(String.format("X: %#x, Y: %#x, Z: %#x", getX(), getY(), getZ()));
 //        System.out.println(String.format("X: %d, Y: %d, Z: %d", getX(), getY(), getZ()));
+        return value;
 
     }
 }

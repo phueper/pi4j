@@ -26,6 +26,7 @@
  */
 
 
+import com.pi4j.component.xyz.XYZSensorScaledValue;
 import com.pi4j.i2c.devices.LSM303D_A;
 import com.pi4j.io.i2c.I2CBus;
 import com.pi4j.io.i2c.I2CFactory;
@@ -37,7 +38,7 @@ public class TestLSM303D_A {
 
         LSM303D_A lsm303d_a = new LSM303D_A(bus);
 
-        lsm303d_a.enable();
+        lsm303d_a.enable(false);
 
         long now = System.currentTimeMillis();
 
@@ -45,10 +46,10 @@ public class TestLSM303D_A {
 
         while (System.currentTimeMillis() - now < 10000) {
 
-            lsm303d_a.readData();
+            XYZSensorScaledValue value = lsm303d_a.readSingleData();
 
-            System.out.println(String.format("             Raw: #: %3d, X: %7d, Y: %7d, Z: %7d", measurement, lsm303d_a.getX(), lsm303d_a.getY(), lsm303d_a.getZ()));
-            System.out.println(String.format("Acceleration (g): #: %3d, X: %7.2f, Y: %7.2f, Z: %7.2f", measurement, lsm303d_a.getScaledX(), lsm303d_a.getScaledY(), lsm303d_a.getScaledZ()));
+            System.out.println(String.format("             Raw: #: %3d, X: %7d, Y: %7d, Z: %7d", measurement, value.getX(), value.getY(), value.getZ()));
+            System.out.println(String.format("Acceleration (g): #: %3d, X: %7.2f, Y: %7.2f, Z: %7.2f", measurement, value.getScaledX(), value.getScaledY(), value.getScaledZ()));
 
             Thread.sleep(100);
 

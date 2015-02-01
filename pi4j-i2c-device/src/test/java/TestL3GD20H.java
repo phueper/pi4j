@@ -25,6 +25,7 @@
  * #L%
  */
 
+import com.pi4j.component.xyz.XYZSensorScaledValue;
 import com.pi4j.i2c.devices.L3GD20H;
 import com.pi4j.io.i2c.I2CBus;
 import com.pi4j.io.i2c.I2CFactory;
@@ -37,7 +38,7 @@ public class TestL3GD20H {
 
         L3GD20H l3gd20h = new L3GD20H(bus);
 
-        l3gd20h.enable();
+        l3gd20h.enable(false);
 
         long now = System.currentTimeMillis();
 
@@ -45,10 +46,10 @@ public class TestL3GD20H {
 
         while (System.currentTimeMillis() - now < 10000) {
 
-            l3gd20h.readData();
+            XYZSensorScaledValue value = l3gd20h.readSingleData();
 
-            System.out.println(String.format("                  Raw: #: %3d, X: %7d, Y: %7d, Z: %7d", measurement, l3gd20h.getX(), l3gd20h.getY(), l3gd20h.getZ()));
-            System.out.println(String.format("AngularVelocity (dps): #: %3d, X: %7.2f, Y: %7.2f, Z: %7.2f", measurement, l3gd20h.getScaledX(), l3gd20h.getScaledY(), l3gd20h.getScaledZ()));
+            System.out.println(String.format("                  Raw: #: %3d, X: %7d, Y: %7d, Z: %7d", measurement, value.getX(), value.getY(), value.getZ()));
+            System.out.println(String.format("AngularVelocity (dps): #: %3d, X: %7.2f, Y: %7.2f, Z: %7.2f", measurement, value.getScaledX(), value.getScaledY(), value.getScaledZ()));
 
             Thread.sleep(100);
 

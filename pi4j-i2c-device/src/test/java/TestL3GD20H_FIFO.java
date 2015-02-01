@@ -3,7 +3,7 @@
  * **********************************************************************
  * ORGANIZATION  :  Pi4J
  * PROJECT       :  Pi4J :: I2C Device Abstractions
- * FILENAME      :  TestLSM303D_M.java  
+ * FILENAME      :  TestL3GD20H_FIFO.java  
  * 
  * This file is part of the Pi4J project. More information about 
  * this project can be found here:  http://www.pi4j.com/
@@ -24,36 +24,46 @@
  * limitations under the License.
  * #L%
  */
+
 import com.pi4j.component.xyz.XYZSensorScaledValue;
-import com.pi4j.i2c.devices.LSM303D_M;
+import com.pi4j.i2c.devices.L3GD20H;
 import com.pi4j.io.i2c.I2CBus;
 import com.pi4j.io.i2c.I2CFactory;
 
-public class TestLSM303D_M {
+import java.util.List;
+
+
+public class TestL3GD20H_FIFO {
 
     public static void main(String[] args) throws Exception {
         I2CBus bus = I2CFactory.getInstance(I2CBus.BUS_1);
 
-        LSM303D_M lsm303d_m = new LSM303D_M(bus);
+        L3GD20H l3gd20h = new L3GD20H(bus);
 
-        lsm303d_m.enable(false);
+        l3gd20h.enable(true);
 
         long now = System.currentTimeMillis();
 
         int measurement = 0;
 
-        while (System.currentTimeMillis() - now < 10000) {
+        while (measurement < 10) {
 
-            XYZSensorScaledValue value = lsm303d_m.readSingleData();
+            List<XYZSensorScaledValue> values = l3gd20h.readFifoData();
+            int i = 0;
+            System.out.println("--------------------------------------------------------------------------------");
+            System.out.println(String.format("Measurement # %d, # of values: %d", measurement, values.size()));
+            for (XYZSensorScaledValue value : values) {
+                System.out.println(String.format("Value #: %d", i++));
+                System.out.println(String.format("                  Raw: #: %3d, X: %7d, Y: %7d, Z: %7d", measurement, value.getX(), value.getY(), value.getZ()));
+                System.out.println(String.format("AngularVelocity (dps): #: %3d, X: %7.2f, Y: %7.2f, Z: %7.2f", measurement, value.getScaledX(), value.getScaledY(), value.getScaledZ()));
+            }
 
-            System.out.println(String.format("                  Raw: #: %3d, X: %7d, Y: %7d, Z: %7d", measurement, value.getX(), value.getY(), value.getZ()));
-            System.out.println(String.format("Magnetic data (gauss): #: %3d, X: %7.2f, Y: %7.2f, Z: %7.2f", measurement, value.getScaledX(), value.getScaledY(), value.getScaledZ()));
 
-            Thread.sleep(100);
-
+            //Thread.sleep(10);
             measurement++;
         }
-        lsm303d_m.disable();
+
+        l3gd20h.disable();
         System.out.println();
     }
 
