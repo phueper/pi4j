@@ -72,17 +72,18 @@ public class L3GD20H implements XYZSensor<XYZSensorScaledValue> {
     public static final int FIFO_THRESHOLD = 30;
     private final float fullScale;
 
-    private I2CDevice device;
     private boolean fifoEnabled = false;
+    private boolean enabled = false;
 
-    public L3GD20H(I2CBus bus) throws IOException {
-        device = bus.getDevice(L3GD20H_ADDRESS);
+    public L3GD20H() throws IOException {
         // default dps for L3GD20H: 245, could be changed in CTRL4
         fullScale = 245;
     }
 
     @Override
-    public void enable(boolean enableFifo) throws IOException {
+    public void enable(I2CBus bus, boolean enableFifo) throws IOException {
+        I2CDevice device = getI2CDevice(bus);
+        device = bus.getDevice(L3GD20H_ADDRESS);
         // CTRL1 PD -> Power Mode (0=Power Down, 1=Normal Mode)
         byte ctrl1 = (byte) device.read(CTRL1);
         ctrl1 |= (byte) 1 << 3;
@@ -113,11 +114,12 @@ public class L3GD20H implements XYZSensor<XYZSensorScaledValue> {
         ctrl4 |= (byte) 1 << 7;
         device.write(CTRL4, ctrl4);
         if (enableFifo) {
-            enableFifo();
+            enableFifo(device);
         }
+        enabled = true;
     }
 
-    private void enableFifo() throws IOException {
+    private void enableFifo(I2CDevice device) throws IOException {
         fifoEnabled = true;
         // enable dynamic stream mode
         // FIFO_CTRL(FM2:0) = 0b110
@@ -141,7 +143,9 @@ public class L3GD20H implements XYZSensor<XYZSensorScaledValue> {
     }
 
     @Override
-    public void disable() throws IOException {
+    public void disable(I2CBus bus) throws IOException {
+        I2CDevice device = getI2CDevice(bus);
+        enabled = false;
         if (fifoEnabled) {
             // disable fifo
             // FIFO_EN to Disable
@@ -156,7 +160,8 @@ public class L3GD20H implements XYZSensor<XYZSensorScaledValue> {
     }
 
     @Override
-    public List<XYZSensorScaledValue> readFifoData() throws IOException {
+    public List<XYZSensorScaledValue> readFifoData(I2CBus bus) throws IOException {
+        I2CDevice device = getI2CDevice(bus);
         List<XYZSensorScaledValue> rval = new ArrayList<>();
         byte[] data = new byte[6 * (FIFO_THRESHOLD + 1)];
         // read FIFO_SRC to see how much data was available and wether overrun occurred
@@ -224,7 +229,13 @@ public class L3GD20H implements XYZSensor<XYZSensorScaledValue> {
     }
 
     @Override
-    public XYZSensorScaledValue readSingleData() throws IOException {
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    @Override
+    public XYZSensorScaledValue readSingleData(I2CBus bus) throws IOException {
+        I2CDevice device = getI2CDevice(bus);
         XYZSensorScaledValue value = new XYZSensorScaledValueImpl();
         value.setFullScale(fullScale);
         byte[] data = new byte[6];
@@ -243,6 +254,10 @@ public class L3GD20H implements XYZSensor<XYZSensorScaledValue> {
 //        System.out.println(String.format("X: %#x, Y: %#x, Z: %#x", getX(), getY(), getZ()));
 //        System.out.println(String.format("X: %d, Y: %d, Z: %d", getX(), getY(), getZ()));
         return value;
+    }
+
+    private I2CDevice getI2CDevice(I2CBus bus) throws IOException {
+        return bus.getDevice(L3GD20H_ADDRESS);
     }
 
 }

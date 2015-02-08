@@ -36,9 +36,9 @@ public class TestL3GD20H {
     public static void main(String[] args) throws Exception {
         I2CBus bus = I2CFactory.getInstance(I2CBus.BUS_1);
 
-        L3GD20H l3gd20h = new L3GD20H(bus);
+        L3GD20H l3gd20h = new L3GD20H();
 
-        l3gd20h.enable(false);
+        l3gd20h.enable(bus, false);
 
         long now = System.currentTimeMillis();
 
@@ -46,7 +46,7 @@ public class TestL3GD20H {
 
         while (System.currentTimeMillis() - now < 10000) {
 
-            XYZSensorScaledValue value = l3gd20h.readSingleData();
+            XYZSensorScaledValue value = l3gd20h.readSingleData(bus);
 
             System.out.println(String.format("                  Raw: #: %3d, X: %7d, Y: %7d, Z: %7d", measurement, value.getX(), value.getY(), value.getZ()));
             System.out.println(String.format("AngularVelocity (dps): #: %3d, X: %7.2f, Y: %7.2f, Z: %7.2f", measurement, value.getScaledX(), value.getScaledY(), value.getScaledZ()));
@@ -55,6 +55,7 @@ public class TestL3GD20H {
 
             measurement++;
         }
+        l3gd20h.disable(bus);
         System.out.println();
     }
 

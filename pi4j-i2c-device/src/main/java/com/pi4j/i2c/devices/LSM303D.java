@@ -106,25 +106,21 @@ public abstract class LSM303D implements XYZSensor<XYZSensorScaledValue> {
     public static final int ACT_DUR = 0x3f;
     private static final int CALIBRATION_READS = 50;
     private static final int CALIBRATION_SKIPS = 5;
-    protected I2CDevice device;
     
     /* where to read the data from */
     protected int dataBaseRegAddress;
     
     protected float fullScale = 1;
 
-    public LSM303D(I2CBus bus) throws IOException {
-        device = bus.getDevice(LSM303D_ADDRESS);
-    }
-
     @Override
-    public List<XYZSensorScaledValue> readFifoData() throws IOException {
+    public List<XYZSensorScaledValue> readFifoData(I2CBus bus) throws IOException {
         // not implemented
         throw new NotImplementedException();
     }
 
     @Override
-    public XYZSensorScaledValue readSingleData() throws IOException {
+    public XYZSensorScaledValue readSingleData(I2CBus bus) throws IOException {
+        I2CDevice device = bus.getDevice(LSM303D_ADDRESS);
         XYZSensorScaledValue value = new XYZSensorScaledValueImpl();
         value.setFullScale(fullScale);
         byte[] data = new byte[6];

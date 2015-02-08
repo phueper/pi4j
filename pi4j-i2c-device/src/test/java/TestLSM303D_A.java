@@ -36,9 +36,9 @@ public class TestLSM303D_A {
     public static void main(String[] args) throws Exception {
         I2CBus bus = I2CFactory.getInstance(I2CBus.BUS_1);
 
-        LSM303D_A lsm303d_a = new LSM303D_A(bus);
+        LSM303D_A lsm303d_a = new LSM303D_A();
 
-        lsm303d_a.enable(false);
+        lsm303d_a.enable(bus, false);
 
         long now = System.currentTimeMillis();
 
@@ -46,7 +46,7 @@ public class TestLSM303D_A {
 
         while (System.currentTimeMillis() - now < 10000) {
 
-            XYZSensorScaledValue value = lsm303d_a.readSingleData();
+            XYZSensorScaledValue value = lsm303d_a.readSingleData(bus);
 
             System.out.println(String.format("             Raw: #: %3d, X: %7d, Y: %7d, Z: %7d", measurement, value.getX(), value.getY(), value.getZ()));
             System.out.println(String.format("Acceleration (g): #: %3d, X: %7.2f, Y: %7.2f, Z: %7.2f", measurement, value.getScaledX(), value.getScaledY(), value.getScaledZ()));
@@ -55,7 +55,7 @@ public class TestLSM303D_A {
 
             measurement++;
         }
-        lsm303d_a.disable();
+        lsm303d_a.disable(bus);
         System.out.println();
     }
 

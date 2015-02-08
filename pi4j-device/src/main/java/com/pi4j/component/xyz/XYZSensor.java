@@ -27,13 +27,18 @@ package com.pi4j.component.xyz;
  * #L%
  */
 
+import com.pi4j.io.i2c.I2CBus;
+
 import java.io.IOException;
 import java.util.List;
 
 public interface XYZSensor<V extends XYZSensorValue> {
     
-    public void enable(boolean enableFifo) throws IOException;
-    public void disable() throws IOException;
-    public V readSingleData() throws IOException;
-    public List<V> readFifoData() throws IOException;
+    void enable(I2CBus bus, boolean enableFifo) throws IOException;
+
+    void disable(I2CBus bus) throws IOException;
+    V readSingleData(I2CBus bus) throws IOException;
+    List<V> readFifoData(I2CBus bus) throws IOException;
+
+    boolean isEnabled();
 }

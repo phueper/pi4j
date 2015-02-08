@@ -36,7 +36,7 @@ public class TestLSM303D_M {
 
         LSM303D_M lsm303d_m = new LSM303D_M(bus);
 
-        lsm303d_m.enable(false);
+        lsm303d_m.enable(bus, false);
 
         long now = System.currentTimeMillis();
 
@@ -44,7 +44,7 @@ public class TestLSM303D_M {
 
         while (System.currentTimeMillis() - now < 10000) {
 
-            XYZSensorScaledValue value = lsm303d_m.readSingleData();
+            XYZSensorScaledValue value = lsm303d_m.readSingleData(bus);
 
             System.out.println(String.format("                  Raw: #: %3d, X: %7d, Y: %7d, Z: %7d", measurement, value.getX(), value.getY(), value.getZ()));
             System.out.println(String.format("Magnetic data (gauss): #: %3d, X: %7.2f, Y: %7.2f, Z: %7.2f", measurement, value.getScaledX(), value.getScaledY(), value.getScaledZ()));
@@ -53,7 +53,7 @@ public class TestLSM303D_M {
 
             measurement++;
         }
-        lsm303d_m.disable();
+        lsm303d_m.disable(bus);
         System.out.println();
     }
 

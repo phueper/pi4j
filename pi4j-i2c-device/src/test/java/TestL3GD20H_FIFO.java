@@ -38,9 +38,9 @@ public class TestL3GD20H_FIFO {
     public static void main(String[] args) throws Exception {
         I2CBus bus = I2CFactory.getInstance(I2CBus.BUS_1);
 
-        L3GD20H l3gd20h = new L3GD20H(bus);
+        L3GD20H l3gd20h = new L3GD20H();
 
-        l3gd20h.enable(true);
+        l3gd20h.enable(bus, true);
 
         long now = System.currentTimeMillis();
 
@@ -48,7 +48,7 @@ public class TestL3GD20H_FIFO {
 
         while (measurement < 10) {
 
-            List<XYZSensorScaledValue> values = l3gd20h.readFifoData();
+            List<XYZSensorScaledValue> values = l3gd20h.readFifoData(bus);
             int i = 0;
             System.out.println("--------------------------------------------------------------------------------");
             System.out.println(String.format("Measurement # %d, # of values: %d", measurement, values.size()));
@@ -63,7 +63,7 @@ public class TestL3GD20H_FIFO {
             measurement++;
         }
 
-        l3gd20h.disable();
+        l3gd20h.disable(bus);
         System.out.println();
     }
 

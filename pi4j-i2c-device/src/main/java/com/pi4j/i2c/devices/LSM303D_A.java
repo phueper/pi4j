@@ -28,6 +28,7 @@ package com.pi4j.i2c.devices;
  */
 
 import com.pi4j.io.i2c.I2CBus;
+import com.pi4j.io.i2c.I2CDevice;
 
 import java.io.IOException;
 
@@ -40,29 +41,39 @@ import java.io.IOException;
  */
 public class LSM303D_A extends LSM303D {
 
-    public LSM303D_A(I2CBus bus) throws IOException {
-        super(bus);
+    private boolean enabled = false;
+
+    public LSM303D_A() throws IOException {
         // default scale for LSM303D_A: +/- 2g, could be changed in CTRL2
         fullScale = 2;
         dataBaseRegAddress = OUT_X_L_A;
     }
 
     @Override
-    public void enable(boolean enableFifo) throws IOException {
+    public void enable(I2CBus bus, boolean enableFifo) throws IOException {
+        I2CDevice device = bus.getDevice(LSM303D_ADDRESS);
         // CTRL1 AODR[3:0] -> Power Mode (0x5 = 50 Hz) 
         byte ctrl1 = (byte) device.read(CTRL1);
         ctrl1 |= (byte) (0x5 & 0xf) << 4;
         // CTRL1 BDU -> Block Data Update (1= output registers not updated until MSB and LSB reading)
         ctrl1 |= (byte) 1 << 3;
         device.write(CTRL1, ctrl1);
+        enabled = true;
     }
 
     @Override
-    public void disable() throws IOException {
+    public void disable(I2CBus bus) throws IOException {
+        I2CDevice device = bus.getDevice(LSM303D_ADDRESS);
+        enabled = false;
         // CTRL1 AODR -> Power Mode (0 = Power Down)
         byte ctrl1 = (byte) device.read(CTRL1);
         ctrl1 &= (byte) ~(0xF << 4);
         device.write(CTRL1, ctrl1);
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return enabled;
     }
 
 }
