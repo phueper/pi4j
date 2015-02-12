@@ -3,7 +3,7 @@
  * **********************************************************************
  * ORGANIZATION  :  Pi4J
  * PROJECT       :  Pi4J :: Java Examples
- * FILENAME      :  PibrellaExample.java  
+ * FILENAME      :  PiBrellaExample.java  
  * 
  * This file is part of the Pi4J project. More information about 
  * this project can be found here:  http://www.pi4j.com/
@@ -33,7 +33,7 @@ import com.pi4j.device.pibrella.impl.PibrellaDevice;
 
 import java.io.IOException;
 
-public class PibrellaExample {
+public class PiBrellaExample {
 
     static int cylonSpeed = 100;
 
