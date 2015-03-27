@@ -40,20 +40,36 @@ Copyright (C) 2012-2015 Pi4J
 
 ## IN DEVEOPMENT
 
-2015-02-11 :: 1.0-SNAPSHOT
+2015-03-11 :: 1.1-SNAPSHOT
 
-  *  Fixed issue where GPIO state would reset on provisioning
+  *  Added new Serial JNI implementation to support more advanced serial configuration/operations
+  *  Overhauled the Pi4J Serial interface to use the new Serial JNI implementation
+  *  Overhauled wiringPi serial JNI methods to better support raw data operations
+  *  Now requires Java 8 runtime.
+  
+## RELEASE CANDIDATE
+
+2015-03-15 :: 1.0-RC (Release Candidate)
+
+  *  Added support for RaspberryPi v2 Model B
   *  Added support for RaspberryPi Model A+
-  *  Added support for debounce logic on digital input pin events
-  *  Added easy install/uninstall scripts (get.pi4j.com)
-  *  Added APT package and repository support (repository.pi4j.com)
   *  Added support for RaspberryPi Model B+
   *  Added support for RaspberryPi Compute Module
-  *  Removed support (and complicated builds) for soft-float ABI
+  *  Added support for debounce logic on digital input pin events
+  *  Added support for Button component interface
+  *  Added support for Pibrella device
+  *  Added support for a Java-friendly SPI interface
+  *  Added support for SPI modes
+  *  Added support for building pi4j-native project directly on the Pi (using maven)
+  *  Added easy install/uninstall scripts (get.pi4j.com)
+  *  Added APT package and repository support (repository.pi4j.com)
   *  Simplified native library loader to find embedded hard-float native lib
-  *  Updated documentation in preparation for 1.0 release
   *  Fixed JDK8 build errors.
+  *  Removed support (and complicated builds) for soft-float ABI
+  *  Updated documentation in preparation for 1.0 release
   *  Cleaned up build
+  *  Enhancements Added: https://github.com/Pi4J/pi4j/issues?q=label%3Aenhancement+is%3Aclosed+milestone%3A%22RELEASE+1.0%22+
+  *  Bugs/Defects Fixed: https://github.com/Pi4J/pi4j/issues?q=label%3Abug+is%3Aclosed+milestone%3A%22RELEASE+1.0%22+
 
 ## RELEASES
 

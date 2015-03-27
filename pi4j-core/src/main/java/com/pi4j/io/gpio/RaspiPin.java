@@ -31,6 +31,8 @@ package com.pi4j.io.gpio;
 import com.pi4j.io.gpio.impl.PinImpl;
 
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Raspberry Pi pin definitions.
@@ -38,8 +40,9 @@ import java.util.EnumSet;
  * @author Robert Savage (<a
  *         href="http://www.savagehomeautomation.com">http://www.savagehomeautomation.com</a>)
  */
-@SuppressWarnings("unused")
 public class RaspiPin  {
+
+    private static Map<String, Pin> pins = new HashMap<String, Pin>();
     
     public static final Pin GPIO_00 = createDigitalPin(0, "GPIO 0"); 
     public static final Pin GPIO_01 = createDigitalAndPwmPin(1, "GPIO 1"); // supports PWM0 [ALT5]
@@ -66,25 +69,36 @@ public class RaspiPin  {
     public static final Pin GPIO_20 = createDigitalPin(20, "GPIO 20"); // requires B rev2 or newer model (P5 header)
 
     // the following GPIO pins are only available on the Raspbery Pi Model B+
-    public static final Pin GPIO_21 = createDigitalPin(21, "GPIO 21"); // requires A+, B+ or newer model (40 pin header)
-    public static final Pin GPIO_22 = createDigitalPin(22, "GPIO 22"); // requires A+, B+ or newer model (40 pin header)
-    public static final Pin GPIO_23 = createDigitalAndPwmPin(23, "GPIO 23"); // requires A+, B+ or newer model (40 pin header) : supports PWM1 [ALT0]
-    public static final Pin GPIO_24 = createDigitalAndPwmPin(24, "GPIO 24"); // requires A+, B+ or newer model (40 pin header) : supports PWM1 [ALT5]
-    public static final Pin GPIO_25 = createDigitalPin(25, "GPIO 25"); // requires A+, B+ or newer model (40 pin header)
-    public static final Pin GPIO_26 = createDigitalAndPwmPin(26, "GPIO 26"); // requires A+, B+ or newer model (40 pin header) : supports PWM0 [ALT0]
-    public static final Pin GPIO_27 = createDigitalPin(27, "GPIO 27"); // requires A+, B+ or newer model (40 pin header)
-    public static final Pin GPIO_28 = createDigitalPin(28, "GPIO 28"); // requires A+, B+ or newer model (40 pin header)
-    public static final Pin GPIO_29 = createDigitalPin(29, "GPIO 29"); // requires A+, B+ or newer model (40 pin header)
+    public static final Pin GPIO_21 = createDigitalPin(21, "GPIO 21"); // requires 2B, A+, B+ or newer model (40 pin header)
+    public static final Pin GPIO_22 = createDigitalPin(22, "GPIO 22"); // requires 2B, A+, B+ or newer model (40 pin header)
+    public static final Pin GPIO_23 = createDigitalAndPwmPin(23, "GPIO 23"); // requires 2B, A+, B+ or newer model (40 pin header) : supports PWM1 [ALT0]
+    public static final Pin GPIO_24 = createDigitalAndPwmPin(24, "GPIO 24"); // requires 2B, A+, B+ or newer model (40 pin header) : supports PWM1 [ALT5]
+    public static final Pin GPIO_25 = createDigitalPin(25, "GPIO 25"); // requires 2B, A+, B+ or newer model (40 pin header)
+    public static final Pin GPIO_26 = createDigitalAndPwmPin(26, "GPIO 26"); // requires 2B, A+, B+ or newer model (40 pin header) : supports PWM0 [ALT0]
+    public static final Pin GPIO_27 = createDigitalPin(27, "GPIO 27"); // requires 2B, A+, B+ or newer model (40 pin header)
+    public static final Pin GPIO_28 = createDigitalPin(28, "GPIO 28"); // requires 2B, A+, B+ or newer model (40 pin header)
+    public static final Pin GPIO_29 = createDigitalPin(29, "GPIO 29"); // requires 2B, A+, B+ or newer model (40 pin header)
+
 
     private static Pin createDigitalPin(int address, String name) {
-        return new PinImpl(RaspiGpioProvider.NAME, address, name, 
+        Pin pin = new PinImpl(RaspiGpioProvider.NAME, address, name, 
                     EnumSet.of(PinMode.DIGITAL_INPUT, PinMode.DIGITAL_OUTPUT),
                     PinPullResistance.all());
+        if (pins == null) { pins = new HashMap<String, Pin>(); }
+        pins.put(name, pin);
+        return pin;
     }
 
     private static Pin createDigitalAndPwmPin(int address, String name) {
-        return new PinImpl(RaspiGpioProvider.NAME, address, name, 
+        Pin pin = new PinImpl(RaspiGpioProvider.NAME, address, name, 
                            EnumSet.of(PinMode.DIGITAL_INPUT, PinMode.DIGITAL_OUTPUT, PinMode.PWM_OUTPUT),
                            PinPullResistance.all());
+        if (pins == null) { pins = new HashMap<String, Pin>(); }
+        pins.put(name, pin);
+        return pin;
+    }
+    
+    public static Pin getPinByName(String name) {
+    	return pins.get(name);
     }
 }

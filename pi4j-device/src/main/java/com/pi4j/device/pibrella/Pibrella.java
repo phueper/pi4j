@@ -27,8 +27,9 @@ package com.pi4j.device.pibrella;
  * #L%
  */
 
+import com.pi4j.component.button.Button;
+import com.pi4j.component.buzzer.Buzzer;
 import com.pi4j.component.light.LED;
-import com.pi4j.component.switches.MomentarySwitch;
 import com.pi4j.device.Device;
 import com.pi4j.io.gpio.GpioController;
 import com.pi4j.io.gpio.GpioPinDigitalInput;
@@ -42,7 +43,7 @@ public interface Pibrella extends Device {
 
     GpioController gpio();
 
-    MomentarySwitch button();
+    Button button();
     Buzzer buzzer();
 
     GpioPinDigitalInput inputA();
@@ -91,9 +92,9 @@ public interface Pibrella extends Device {
     GpioPinDigitalOutput getOutputPin(PibrellaOutput output);
 
     /**
-     * @return a switch
+     * @return a button
      */
-    MomentarySwitch getButton();
+    Button getButton();
 
     /**
      * @return a buzzer

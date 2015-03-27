@@ -29,4 +29,5 @@ package com.pi4j.component;
 
 
 public interface ComponentListener extends java.util.EventListener {
+    // MARKER INTERFACE
 }

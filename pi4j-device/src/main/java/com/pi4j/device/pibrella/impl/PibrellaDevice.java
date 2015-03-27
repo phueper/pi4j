@@ -27,8 +27,6 @@ package com.pi4j.device.pibrella.impl;
  * #L%
  */
 
-import com.pi4j.device.pibrella.PibrellaBase;
-
 public class PibrellaDevice extends PibrellaBase {
 
     // default constructor
