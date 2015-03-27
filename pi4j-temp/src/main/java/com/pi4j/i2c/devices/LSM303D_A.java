@@ -4,7 +4,7 @@ package com.pi4j.i2c.devices;
  * #%L
  * **********************************************************************
  * ORGANIZATION  :  Pi4J
- * PROJECT       :  Pi4J :: I2C Device Abstractions
+ * PROJECT       :  Pi4J :: Temporary Placeholder
  * FILENAME      :  LSM303D_A.java  
  * 
  * This file is part of the Pi4J project. More information about 

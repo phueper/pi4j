@@ -2,8 +2,8 @@
  * #%L
  * **********************************************************************
  * ORGANIZATION  :  Pi4J
- * PROJECT       :  Pi4J :: I2C Device Abstractions
- * FILENAME      :  TestLSM303D_M.java  
+ * PROJECT       :  Pi4J :: Temporary Placeholder
+ * FILENAME      :  TestLSM303D_A.java  
  * 
  * This file is part of the Pi4J project. More information about 
  * this project can be found here:  http://www.pi4j.com/
@@ -24,19 +24,21 @@
  * limitations under the License.
  * #L%
  */
+
+
 import com.pi4j.component.xyz.XYZSensorScaledValue;
-import com.pi4j.i2c.devices.LSM303D_M;
+import com.pi4j.i2c.devices.LSM303D_A;
 import com.pi4j.io.i2c.I2CBus;
 import com.pi4j.io.i2c.I2CFactory;
 
-public class TestLSM303D_M {
+public class TestLSM303D_A {
 
     public static void main(String[] args) throws Exception {
         I2CBus bus = I2CFactory.getInstance(I2CBus.BUS_1);
 
-        LSM303D_M lsm303d_m = new LSM303D_M(bus);
+        LSM303D_A lsm303d_a = new LSM303D_A();
 
-        lsm303d_m.enable(bus, false);
+        lsm303d_a.enable(bus, false);
 
         long now = System.currentTimeMillis();
 
@@ -44,16 +46,16 @@ public class TestLSM303D_M {
 
         while (System.currentTimeMillis() - now < 10000) {
 
-            XYZSensorScaledValue value = lsm303d_m.readSingleData(bus);
+            XYZSensorScaledValue value = lsm303d_a.readSingleData(bus);
 
-            System.out.println(String.format("                  Raw: #: %3d, X: %7d, Y: %7d, Z: %7d", measurement, value.getX(), value.getY(), value.getZ()));
-            System.out.println(String.format("Magnetic data (gauss): #: %3d, X: %7.2f, Y: %7.2f, Z: %7.2f", measurement, value.getScaledX(), value.getScaledY(), value.getScaledZ()));
+            System.out.println(String.format("             Raw: #: %3d, X: %7d, Y: %7d, Z: %7d", measurement, value.getX(), value.getY(), value.getZ()));
+            System.out.println(String.format("Acceleration (g): #: %3d, X: %7.2f, Y: %7.2f, Z: %7.2f", measurement, value.getScaledX(), value.getScaledY(), value.getScaledZ()));
 
             Thread.sleep(100);
 
             measurement++;
         }
-        lsm303d_m.disable(bus);
+        lsm303d_a.disable(bus);
         System.out.println();
     }
 
